@@ -4,9 +4,14 @@
 
 WordPressのエクスポートファイルをhugoで使用するファイルにエクスポートする。
 
-画像ファイルも含めてエクスポートする。
+以下が特徴です。
 
+- 画像ファイルも含めてエクスポートする。
+- 記事の一番最初に掲載されている画像ファイルをアイキャッチに設定する。
+  
+注意事項
 
+- すべて公開設定にするため、下書きなども公開される
 
 ## 使い方
 
@@ -14,7 +19,7 @@ WordPressのエクスポートファイルをhugoで使用するファイルに�
 
 ```golang
 	// The path to the exported XML file containing all posts
-	WordPressXMLFile = "./test.WordPress.2023-11-03.xml"
+	WordPressXMLFile = "./test.WordPress.xml"
 ```
 
 ## 出力するファイル構成

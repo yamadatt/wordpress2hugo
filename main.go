@@ -56,6 +56,8 @@ func main() {
 		panic(err)
 	}
 
+	var firstImage string
+
 	for _, item := range doc.FindElements("//item") {
 		postType := item.SelectElement("wp:post_type")
 		if postType.Text() == "attachment" {
@@ -73,7 +75,7 @@ func main() {
 		// fmt.Println(content)
 
 		// Copy images
-		for _, imgURL := range extractImageURLs(content) {
+		for i, imgURL := range extractImageURLs(content) {
 
 			// 画像ファイルのパスを便利に使いたいため、Parseする。
 			parsedImgURL, _ := url.Parse(imgURL)
@@ -87,6 +89,13 @@ func main() {
 			//HTMLに記述されているイメージパスを書き換える
 			content = strings.Replace(content, parsedImgURL.String(), filepath.Join(ImagesDir, img_file_name), 1)
 
+			// アイキャッチに設定するファイルのサイズがゼロだとエラーなので、はじく
+			filesize, _ := FileSizeCheck(destPath)
+
+			if i == 1 && img_file_name != "" && filesize != 0 {
+				firstImage = filepath.Join(ImagesDir, img_file_name)
+			}
+
 		}
 
 		// markdownへの変換部分をコメントアウト
@@ -97,7 +106,7 @@ func main() {
 		// 	panic(err)
 		// }
 
-		frontMatter := fmt.Sprintf("---\ntitle: %s\ndate: %s\ndraft: false\ntags: [%s]\nsummary: \ncategory: \"\"\ntype: Post\n---\n", title, formatDate(dateStr), strings.Join(tags, ", "))
+		frontMatter := fmt.Sprintf("---\ntitle: %s\nimage: \"%s\"\ndate: %s\ndraft: false\ntags: [%s]\nsummary: \ncategory: \"\"\ntype: Post\n---\n", title, firstImage, formatDate(dateStr), strings.Join(tags, ", "))
 		// contentString := frontMatter + string(markdown)
 		contentString := frontMatter + string(content)
 		err := os.WriteFile(filepath.Join(postDir, "index.md"), []byte(contentString), 0644)
@@ -106,6 +115,27 @@ func main() {
 		}
 
 	}
+}
+
+func FileSizeCheck(filepath string) (int, error) {
+	f, err := os.Open(filepath)
+	if err != nil {
+		return 0, err
+	}
+	defer f.Close()
+
+	info, err := f.Stat()
+	if err != nil {
+		return 0, err
+	}
+	size64 := info.Size()
+
+	var size int
+	if int64(int(size64)) == size64 {
+		size = int(size64)
+	}
+
+	return size, nil
 }
 
 func DownloadImage(imgurl string, downloadpath string) string {
