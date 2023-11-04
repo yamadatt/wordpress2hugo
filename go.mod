@@ -3,6 +3,7 @@ module github.com/wjessop/wp_to_hugo
 go 1.21.1
 
 require (
+	github.com/JohannesKaufmann/html-to-markdown v1.4.1
 	github.com/PuerkitoBio/goquery v1.8.1
 	github.com/beevik/etree v1.2.0
 )

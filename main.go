@@ -13,7 +13,7 @@ import (
 	"strings"
 	"time"
 
-	// md "github.com/JohannesKaufmann/html-to-markdown"
+	md "github.com/JohannesKaufmann/html-to-markdown"
 	"github.com/PuerkitoBio/goquery"
 	"github.com/beevik/etree"
 )
@@ -44,19 +44,21 @@ const (
 	ImagesDir  = "images"
 
 	// The path to the exported XML file containing all posts
-	WordPressXMLFile = "./test.WordPress.2023-11-03.xml"
+	WordPressXMLFile = "./test.WordPress.2023-11-04.xml"
 
 	// The path to the images export dir
 	LocalImageDir = "/home/yamadatt/git/wordpress_to_hugo/"
 )
 
 func main() {
+
+	var ConvertMD = false
+	var firstImage string
+
 	doc := etree.NewDocument()
 	if err := doc.ReadFromFile(WordPressXMLFile); err != nil {
 		panic(err)
 	}
-
-	var firstImage string
 
 	for _, item := range doc.FindElements("//item") {
 		postType := item.SelectElement("wp:post_type")
@@ -71,8 +73,6 @@ func main() {
 
 		postDir := filepath.Join(BaseDir, ContentDir, PostsDir, formatyyyymmdd(dateStr)+strings.ReplaceAll(title, " ", "-"))
 		_ = os.MkdirAll(filepath.Join(postDir, ImagesDir), os.ModePerm)
-
-		// fmt.Println(content)
 
 		// Copy images
 		for i, imgURL := range extractImageURLs(content) {
@@ -89,7 +89,7 @@ func main() {
 			//HTMLに記述されているイメージパスを書き換える
 			content = strings.Replace(content, parsedImgURL.String(), filepath.Join(ImagesDir, img_file_name), 1)
 
-			// アイキャッチに設定するファイルのサイズがゼロだとエラーなので、はじく
+			// アイキャッチに設定するファイルのサイズがゼロだとhugoでエラーになるのでゼロバイトファイルをはじく
 			filesize, _ := FileSizeCheck(destPath)
 
 			if i == 1 && img_file_name != "" && filesize != 0 {
@@ -98,17 +98,24 @@ func main() {
 
 		}
 
-		// markdownへの変換部分をコメントアウト
-		// converter := md.NewConverter("", true, nil)
-
-		// markdown, err := converter.ConvertString(content)
-		// if err != nil {
-		// 	panic(err)
-		// }
-
 		frontMatter := fmt.Sprintf("---\ntitle: %s\nimage: \"%s\"\ndate: %s\ndraft: false\ntags: [%s]\nsummary: \ncategory: \"\"\ntype: Post\n---\n", title, firstImage, formatDate(dateStr), strings.Join(tags, ", "))
-		// contentString := frontMatter + string(markdown)
-		contentString := frontMatter + string(content)
+
+		//ConverMDがtrueかfalseでmarkdownに変換を決める
+		var contentString string
+
+		if ConvertMD == true {
+			converter := md.NewConverter("", true, nil)
+			markdown, err := converter.ConvertString(content)
+			if err != nil {
+				panic(err)
+			}
+
+			contentString = frontMatter + string(markdown)
+
+		} else {
+			contentString = frontMatter + string(content)
+		}
+
 		err := os.WriteFile(filepath.Join(postDir, "index.md"), []byte(contentString), 0644)
 		if err != nil {
 			panic(err)
