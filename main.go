@@ -37,7 +37,6 @@ const (
 								post-image-for-this-other-arcicle.jpg
 
 	*/
-	// BaseDir    = "/home/yamadatt/git/wordpress_to_hugo/"
 	BaseDir    = "/home/yamadatt/git/hugoplate/content/english/blog"
 	ContentDir = "content"
 	PostsDir   = "posts"
