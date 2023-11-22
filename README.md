@@ -22,7 +22,7 @@ WordPressのエクスポートファイルをhugoで使用するファイルに�
 	WordPressXMLFile = "./test.WordPress.xml"
 ```
 
-markdownに変換したい場合は以下をtrueに変更する。
+markdownに変換したい場合は```main.go```の以下をtrueに変更する。
 
 ```bash
 	var ConvertMD = false 

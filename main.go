@@ -3,10 +3,11 @@ package main
 import (
 	// "encoding/xml"
 	"fmt"
+	"golang.org/x/text/width"
 	"io"
 	"log"
 	"net/http"
-	"net/url"
+	// "net/url"
 	"os"
 	"path"
 	"path/filepath"
@@ -43,7 +44,7 @@ const (
 	ImagesDir  = "images"
 
 	// The path to the exported XML file containing all posts
-	WordPressXMLFile = "./test.WordPress.2023-11-04.xml"
+	WordPressXMLFile = "./WordPress.2023-11-06.xml"
 
 	// The path to the images export dir
 	LocalImageDir = "/home/yamadatt/git/wordpress_to_hugo/"
@@ -69,35 +70,38 @@ func main() {
 		content := item.SelectElement("content:encoded").Text()
 		dateStr := item.SelectElement("pubDate").Text()
 		tags := extractTags(item)
+		postid := item.SelectElement("post_id").Text()
+		// println("postid", postid)
 
-		postDir := filepath.Join(BaseDir, ContentDir, PostsDir, formatyyyymmdd(dateStr)+strings.ReplaceAll(title, " ", "-"))
+		// postDir := filepath.Join(BaseDir, ContentDir, PostsDir, formatyyyymmdd(dateStr)+strings.ReplaceAll(title, " ", "-"))
+		postDir := filepath.Join(BaseDir, ContentDir, PostsDir, formatyyyymmdd(dateStr)) + width.Fold.String(title)
 		_ = os.MkdirAll(filepath.Join(postDir, ImagesDir), os.ModePerm)
 
 		// Copy images
-		for i, imgURL := range extractImageURLs(content) {
+		// for i, imgURL := range extractImageURLs(content) {
 
-			// 画像ファイルのパスを便利に使いたいため、Parseする。
-			parsedImgURL, _ := url.Parse(imgURL)
-			pathParts := strings.Split(parsedImgURL.Path, "/")
+		// 	// 画像ファイルパスを便利に使いたいため、Parseする。
+		// 	parsedImgURL, _ := url.Parse(imgURL)
+		// 	pathParts := strings.Split(parsedImgURL.Path, "/")
 
-			imgName := pathParts[len(pathParts)-1]
-			destPath := filepath.Join(postDir, ImagesDir, imgName)
+		// 	imgName := pathParts[len(pathParts)-1]
+		// 	destPath := filepath.Join(postDir, ImagesDir, imgName)
 
-			img_file_name := DownloadImage(parsedImgURL.String(), destPath)
+		// 	img_file_name := DownloadImage(parsedImgURL.String(), destPath)
 
-			//HTMLに記述されているイメージパスを書き換える
-			content = strings.Replace(content, parsedImgURL.String(), filepath.Join(ImagesDir, img_file_name), 1)
+		// 	//HTMLに記述されているイメージパスを書き換える
+		// 	content = strings.Replace(content, parsedImgURL.String(), filepath.Join(ImagesDir, img_file_name), -1)
 
-			// アイキャッチに設定するファイルのサイズがゼロだとhugoでエラーになるのでゼロバイトファイルをはじく
-			filesize, _ := FileSizeCheck(destPath)
+		// 	// アイキャッチに設定するファイルのサイズがゼロだとhugoでエラーになるのでゼロバイトファイルをはじく
+		// 	filesize, _ := FileSizeCheck(destPath)
 
-			if i == 1 && img_file_name != "" && filesize != 0 {
-				firstImage = filepath.Join(ImagesDir, img_file_name)
-			}
+		// 	if i == 1 && img_file_name != "" && filesize != 0 {
+		// 		firstImage = filepath.Join(ImagesDir, img_file_name)
+		// 	}
 
-		}
+		// }
 
-		frontMatter := fmt.Sprintf("---\ntitle: %s\nimage: \"%s\"\ndate: %s\ndraft: false\ntags: [%s]\nsummary: \ncategory: \"\"\ntype: Post\n---\n", title, firstImage, formatDate(dateStr), strings.Join(tags, ", "))
+		frontMatter := fmt.Sprintf("---\ntitle: %s\nimage: \"%s\"\ndate: %s\nslug: %s\ndraft: false\ntags: [%s]\nsummary: \ncategory: \"\"\ntype: Post\n---\n", title, firstImage, formatDate(dateStr), postid, strings.Join(tags, ", "))
 
 		//ConverMDがtrueかfalseでmarkdownに変換を決める
 		var contentString string
@@ -166,7 +170,7 @@ func DownloadImage(imgurl string, downloadpath string) string {
 		log.Fatal(err)
 	}
 	file.Close()
-	fmt.Printf("Download Success %s !\n", downloadpath)
+	fmt.Printf("Download Success !  %s \n", downloadpath)
 	return filename
 }
 
