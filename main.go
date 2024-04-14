@@ -232,3 +232,6 @@ func formatyyyymmdd(date string) string {
 	}
 	return t.Format("20060102-")
 }
+
+func scrapeAmeblo(url string) {
+
